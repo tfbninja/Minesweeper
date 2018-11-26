@@ -62,6 +62,7 @@ public class Grid {
             tempNum = miner.nextInt(this.getLength() * this.getWidth());
         }
         // now we have a list of mine positions
+        
     }
 
     public int getWidth() {
