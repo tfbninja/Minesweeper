@@ -1,6 +1,9 @@
 package minesweeper;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 /**
  *
@@ -8,6 +11,13 @@ import java.util.Arrays;
  */
 public class Grid {
 
+    /*
+     * 0 - Untouched
+     * 1 - Safe
+     * 2 - Mine
+     * 3 - Flagged
+     * 4 - Detonated Mine
+     */
     private int width;
     private int length;
     private int[][] playArea;
@@ -39,6 +49,21 @@ public class Grid {
         this.numberOfMines = numMines;
     }
 
+    public void fillMines() {
+        int timeSeed = Integer.valueOf(LocalDateTime.now().toString().trim());
+        Random miner = new Random(timeSeed);
+        ArrayList<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < indices.size(); i++) {
+            int tempNum = -1;
+            while (tempNum < 0 || indices.contains(tempNum)) {
+                tempNum = miner.nextInt(this.getLength() * this.getWidth());
+            }
+
+            tempNum = miner.nextInt(this.getLength() * this.getWidth());
+        }
+        // now we have a list of mine positions
+    }
+
     public int getWidth() {
         return this.width;
     }
@@ -63,8 +88,32 @@ public class Grid {
         return this.numberOfMines;
     }
 
+    public boolean isUntouched(int xPos, int yPos) {
+        return this.playArea[xPos][yPos] == 0;
+    }
+
     public boolean isFlagged(int xPos, int yPos) {
         return this.playArea[xPos][yPos] == 3;
+    }
+
+    public boolean isMine(int xPos, int yPos) {
+        return this.playArea[xPos][yPos] == 2 || this.playArea[xPos][yPos] == 4;
+    }
+
+    public boolean isDetonated(int xPos, int yPos) {
+        return this.playArea[xPos][yPos] == 4;
+    }
+
+    public boolean isInactiveMine(int xPos, int yPos) {
+        return this.playArea[xPos][yPos] == 2;
+    }
+
+    public boolean isClicked(int xPos, int yPos) {
+        return this.playArea[xPos][yPos] == 1;
+    }
+
+    public boolean isSafe(int xPos, int yPos) {
+        return !isMine(xPos, yPos);
     }
 
     public void flag(int xPos, int yPos) {
