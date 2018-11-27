@@ -16,7 +16,6 @@ public class MinesweeperGUI extends Application {
     private int startTime;
 
     public void start(Stage stage) {
-
         HBox root = new HBox();
 
         Board board = new Board(WIDTH, HEIGHT);

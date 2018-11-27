@@ -1,15 +1,13 @@
 package minesweeper;
-import java.util.*;
 
 /**
  *
  * @author Tim Barber
  */
-
 public class Minesweeper {
+
     public static void main(String[] args) {
-        System.out.println("Tim Barber\tNov 26, 2018\tAPCS"); //Header
-        
+        System.out.println("Tim Barber\tNov 2018\tAPCS"); //Header
     }
 }
 

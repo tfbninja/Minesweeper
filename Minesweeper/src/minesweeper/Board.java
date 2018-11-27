@@ -20,7 +20,7 @@ public class Board {
     private int size = 15;
     private int yPos = 10;
 
-    private int numMines = 15;
+    private int numMines = 30;
     private int resetButtonX;
     private int buttonY;
     private int buttonW = 120;
@@ -53,6 +53,7 @@ public class Board {
         this.height = height;
         canvas = new Canvas(width, height);
         grid = new Grid(gridSize, gridSize, numMines);
+        this.grid.fillMines();
         this.resetButtonX = width / 2 - buttonW / 2;
         this.buttonY = (int) (this.height * 0.8);
         this.reset = new Block(resetButtonX, buttonY, (int) (buttonW), buttonH, Color.web(off));
@@ -151,7 +152,7 @@ public class Board {
         } else if (e.isSecondaryButtonDown()) {
             // flag
             try {
-                this.grid.flag(xVal, yVal); // it pains me, but it works
+                this.grid.flag(xVal, yVal);
             } catch (ArrayIndexOutOfBoundsException c) {
                 try {
                     Scanner chop = new Scanner(c.getLocalizedMessage());

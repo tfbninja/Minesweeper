@@ -12,11 +12,12 @@ import java.util.Random;
 public class Grid {
 
     /*
-     * 0 - Untouched
+     * 0 - Untouched - no mine
      * 1 - Safe
      * 2 - Mine
      * 3 - Flagged
      * 4 - Detonated Mine
+     * 5 - Flagged mine
      */
     private int width;
     private int length;
@@ -51,29 +52,30 @@ public class Grid {
     }
 
     public void fillMines() {
+        System.out.println("called");
         this.lastPlayArea = this.playArea;
-        System.out.println("Time seed: " + LocalDateTime.now().toString().trim().replaceAll("\\D", "").substring(5, 15));
-
         int timeSeed = Integer.valueOf(LocalDateTime.now().toString().trim().replaceAll("\\D", "").substring(0, 10));
         Random miner = new Random(timeSeed);
         ArrayList<Integer> xIndices = new ArrayList<>();
         ArrayList<Integer> yIndices = new ArrayList<>();
+        System.out.println("inited");
         for (int i = 0; i < this.numberOfMines; i++) {
+            System.out.println("Loop " + i);
             int tempX = -1;
             int tempY = -1;
-            while (tempX < 0 || xIndices.contains(tempX)) {
-                tempX = miner.nextInt(this.getLength() * this.getWidth());
-            }
-            while (tempY < 0 || xIndices.contains(tempY)) {
-                tempY = miner.nextInt(this.getLength() * this.getWidth());
-            }
+            do {
+                tempX = miner.nextInt(this.getWidth());
+                tempY = miner.nextInt(this.getLength());
+            } while ((xIndices.indexOf(tempX) > -1 && xIndices.indexOf(tempX) == yIndices.indexOf(tempY)) || tempX < 0 || tempY < 0);
             xIndices.add(tempX);
             yIndices.add(tempY);
         }
+        System.out.println("looped");
         // now we have lists of mine positions
         for (int i = 0; i < this.numberOfMines; i++) {
             this.playArea[yIndices.get(i)][xIndices.get(i)] = 2;
         }
+        System.out.println("done");
     }
 
     public int getWidth() {
@@ -101,15 +103,15 @@ public class Grid {
     }
 
     public boolean isUntouched(int xPos, int yPos) {
-        return this.playArea[yPos][xPos] == 0;
+        return this.playArea[yPos][xPos] == 0 || this.playArea[yPos][xPos] == 2;
     }
 
     public boolean isFlagged(int xPos, int yPos) {
-        return this.playArea[yPos][xPos] == 3;
+        return this.playArea[yPos][xPos] == 3 || this.playArea[yPos][xPos] == 5;
     }
 
     public boolean isMine(int xPos, int yPos) {
-        return this.playArea[yPos][xPos] == 2 || this.playArea[yPos][xPos] == 4;
+        return this.playArea[yPos][xPos] == 2 || this.playArea[yPos][xPos] == 4 || this.playArea[yPos][xPos] == 5;
     }
 
     public boolean isDetonated(int xPos, int yPos) {
@@ -134,6 +136,10 @@ public class Grid {
             this.playArea[yPos][xPos] = 3; // flag
         } else if (this.playArea[yPos][xPos] == 3) { //already flagged
             this.playArea[yPos][xPos] = 0; // untouched
+        } else if (this.playArea[yPos][xPos] == 2) { // mine
+            this.playArea[yPos][xPos] = 5; // flagged mine
+        } else if (this.playArea[yPos][xPos] == 5) { //already flagged mine
+            this.playArea[yPos][xPos] = 2; // unflagged mine
         }
     }
 
@@ -184,11 +190,33 @@ public class Grid {
         return this.playArea[y][x];
     }
 
+    public int safeCheck(int xPos, int yPos) {
+        try {
+            return this.playArea[yPos][xPos];
+        } catch (ArrayIndexOutOfBoundsException b) {
+            return -1;
+        }
+    }
+
     public void click(int x, int y) {
         this.lastPlayArea = this.playArea;
         switch (this.playArea[y][x]) {
             case 0:
                 this.playArea[y][x] = 1;
+                // begin clicking all the other zeroes .... yay...
+                if (safeCheck(x - 1, y) == 0) {
+                    System.out.println(safeCheck(x - 1, y));
+                    click(x - 1, y);
+                }
+                if (safeCheck(x + 1, y) == 0) {
+                    click(x + 1, y);
+                }
+                if (safeCheck(x, y - 1) == 0) {
+                    click(x, y - 1);
+                }
+                if (safeCheck(x, y + 1) == 0) {
+                    click(x, y + 1);
+                }
                 break;
             case 1:
                 break;
@@ -212,56 +240,59 @@ public class Grid {
         //check neighbors (with bounds checks)
         if (xPos > 0) {
             if (yPos > 0) {
-                if (isMine(yPos - 1, xPos - 1)) { // if upper left
+                if (isMine(xPos - 1, yPos - 1)) { // if upper left
                     neighbors++;
                 }
             }
         }
 
         if (yPos > 0) {
-            if (isMine(yPos - 1, xPos)) { // if upper
+            if (isMine(xPos, yPos - 1)) { // if upper
                 neighbors++;
             }
         }
 
         if (xPos < (this.length - 1)) {
-            if (yPos > 0 && isMine(yPos - 1, xPos + 1)) { // if upper right
+            if (yPos > 0 && isMine(xPos + 1, yPos - 1)) { // if upper right
                 neighbors++;
             }
         }
 
         if (xPos > 0 && yPos < (this.length - 1)) {
-            if (isMine(yPos + 1, xPos - 1)) { // if lower left
+            if (isMine(xPos - 1, yPos + 1)) { // if lower left
                 neighbors++;
             }
         }
 
         if (yPos < (this.length - 1)) {
-            if (isMine(yPos + 1, xPos)) { // if lower
+            if (isMine(xPos, yPos + 1)) { // if lower
                 neighbors++;
             }
         }
 
         if (yPos < (this.length - 1) && xPos < (this.width - 1)) {
-            if (isMine(yPos + 1, xPos + 1)) { // if lower right
+            if (isMine(xPos + 1, yPos + 1)) { // if lower right
                 neighbors++;
             }
         }
 
-        if (xPos
-                > 0) {
-            if (isMine(yPos, xPos - 1)) {// if left
+        if (xPos > 0) {
+            if (isMine(xPos - 1, yPos)) {// if left
                 neighbors++;
             }
         }
 
         if (xPos < (this.length - 1)) {
-            if (isMine(yPos, xPos + 1)) { // if right
+            if (isMine(xPos + 1, yPos)) { // if right
                 neighbors++;
             }
         }
         return neighbors;
 
+    }
+
+    public boolean isZero(int xPos, int yPos) {
+        return this.playArea[yPos][xPos] == 0;
     }
 
     @Override
