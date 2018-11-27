@@ -11,8 +11,8 @@ import javafx.stage.Stage;
 
 public class MinesweeperGUI extends Application {
 
-    private static final int WIDTH = 618;
-    private static final int HEIGHT = 700;
+    private static final int WIDTH = 357;
+    private static final int HEIGHT = 500;
     private int startTime;
 
     public void start(Stage stage) {
@@ -20,7 +20,7 @@ public class MinesweeperGUI extends Application {
         HBox root = new HBox();
 
         Board board = new Board(WIDTH, HEIGHT);
-        Block bg = new Block(0, 0, WIDTH, HEIGHT, Color.web("87a2a5")); // nice light gray
+        Block bg = new Block(0, 0, WIDTH, HEIGHT, Color.web("ceceb5")); // nice light gray/yellow
         bg.draw(board.getCanvas());
 
         board.drawBlocks();

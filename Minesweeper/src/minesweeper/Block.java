@@ -66,8 +66,14 @@ public class Block implements Locatable {
 
     public void draw(Canvas canvas) {
         GraphicsContext graphics = canvas.getGraphicsContext2D();
-        graphics.setFill(color);
+        graphics.setFill(this.color);
         graphics.fillRect(getX(), getY(), getWidth(), getHeight());
+    }
+
+    public void drawRounded(Canvas canvas, double radius) {
+        GraphicsContext graphics = canvas.getGraphicsContext2D();
+        graphics.setFill(this.color);
+        graphics.fillRoundRect(getX(), getY(), getWidth(), getHeight(), radius, radius);
     }
 
     public int getX() {
