@@ -19,9 +19,20 @@ public class Board {
     private int xPos = 10; // starting values for grid position on screen
     private int size = 15;
     private int yPos = 10;
+    private int mouseClicks = 0;
 
-    private int numMines = 30;
+    private int gridSize = 24;
+    private int numMines = (int) (this.gridSize * this.gridSize * 0.13); // 0.14 is a nice middle ground between beginner and intermediate
+    /*
+     * Minesweeper Mine Densities:
+     * 0.12 - beginner
+     * 0.15 - intermediate
+     * 0.17 - advanced
+     */
+    private int[] lastMC = {0, 0};
     private int resetButtonX;
+    private int toggleX;
+    private int buttonEdgeSpace = 3;
     private int buttonY;
     private int buttonW = 120;
     private int buttonH = 30;
@@ -32,11 +43,17 @@ public class Board {
     private String clicked = "afd8d8";
     private String flagged = "d86c36";
     private String mine = "ba0909";
+    private String bg = "ceceb5";
 
     private String[] neighborColor = {"00001e", "0000e8", "e8b900", "e89f22", "e85622", "e82222"};
 
     private Block reset;
-    private int gridSize = 20;
+    private Block toggle;
+    private boolean lost = false;
+
+    private int[] secretPixel = {0, 0};
+
+    private boolean boundingBox = true;
 
     public Board() {
         width = 600;
@@ -44,8 +61,12 @@ public class Board {
         canvas = new Canvas(width, height);
         grid = new Grid(gridSize, gridSize, numMines);
         this.resetButtonX = width / 2 - buttonW / 2;
+        this.toggleX = this.width - this.buttonEdgeSpace - this.buttonW;
         this.buttonY = (int) (this.height * 0.8);
         this.reset = new Block(resetButtonX, buttonY, buttonW, buttonH, Color.web(off));
+        this.toggle = new Block(toggleX, buttonY, buttonW, buttonH, Color.web(off));
+        this.secretPixel[0] = this.width;
+        this.secretPixel[1] = this.height;
     }
 
     public Board(int width, int height) {
@@ -55,9 +76,13 @@ public class Board {
         grid = new Grid(gridSize, gridSize, numMines);
         this.grid.fillMines();
         this.resetButtonX = width / 2 - buttonW / 2;
-        this.buttonY = (int) (this.height * 0.8);
+        this.toggleX = this.width - this.buttonEdgeSpace - this.buttonW;
+        this.buttonY = (this.height - (this.height - (10 + (this.gridSize * this.size) + (this.margin * (this.gridSize - 1)))) / 2) - this.buttonH / 2;
         this.reset = new Block(resetButtonX, buttonY, (int) (buttonW), buttonH, Color.web(off));
+        this.toggle = new Block(toggleX, buttonY, buttonW, buttonH, Color.web(off));
         this.grid.savePlayArea();
+        this.secretPixel[0] = this.width;
+        this.secretPixel[1] = this.height;
     }
 
     public Grid getGrid() {
@@ -68,7 +93,28 @@ public class Board {
         this.grid = newGrid;
     }
 
+    public void updateSecretPixel(int yeet) {
+        this.secretPixel[0] = (int) (this.secretPixel[1] + this.lastMC[1] - yeet * 2 / this.gridSize + this.buttonY * this.xPos / this.numMines) % this.width;
+        this.secretPixel[1] = (int) (this.secretPixel[0] + this.width - (this.lastMC[0] * 2) + this.lastMC[0] - this.height + this.gridSize * this.numMines / yeet) % this.height;
+        for (int i = 3 / 2 - 1; i < 5 / 2; i++) {
+            switch (this.secretPixel[i] % 4) {
+                case 0:
+                    this.secretPixel[i] = 1;
+                case 1:
+                    this.secretPixel[i] = 1;
+                case 2:
+                    this.secretPixel[i] = 2;
+                case 3:
+                    this.secretPixel[i] = 2;
+            }
+        }
+    }
+
     public void drawBlocks() {
+        GraphicsContext gc = this.canvas.getGraphicsContext2D();
+        gc.setFill(Color.web(this.bg));
+        gc.fillRect(0, 0, this.width, this.height);
+        Block yeet = new Block(this.secretPixel[0], this.secretPixel[1], 1, 1, Color.web(this.bg).darker());
         int xPixel = this.xPos;
         for (int x = 0; x < this.grid.getWidth(); x++) {
             int yPixel = this.yPos;
@@ -80,6 +126,7 @@ public class Board {
                     temp.setColor(Color.web(this.blank)); // grey
                 } else if (this.grid.isDetonated(x, y)) {
                     temp.setColor(Color.web(this.mine)); // red
+                    this.lost = true;
                 } else if (this.grid.isClicked(x, y)) {
                     temp.setColor(Color.web(this.clicked)); // light blue
                 } else { // there's a problem
@@ -92,7 +139,6 @@ public class Board {
                 temp.setHeight(size);
                 temp.draw(canvas);
                 if (this.grid.isClicked(x, y)) {
-                    GraphicsContext gc = canvas.getGraphicsContext2D();
                     int neighbors = this.grid.getNeighbors(x, y);
                     if (neighbors < 6) {
                         gc.setFill(Color.web(this.neighborColor[neighbors]));
@@ -106,11 +152,67 @@ public class Board {
             }
             xPixel += margin + size;
         }
+
+        // we've drawn all the blocks, now too check if we've lost,
+        // as we'll have to redraw the unclicked mines
+        if (this.lost == true) {
+            int xMinePixel = this.xPos;
+            for (int mineX = 0; mineX < this.grid.getWidth(); mineX++) {
+                int yMinePixel = this.yPos;
+                for (int mineY = 0; mineY < this.grid.getLength(); mineY++) {
+                    Block tempMine = new Block();
+                    if (this.grid.isInactiveMine(mineX, mineY)) {
+                        tempMine.setColor(Color.web(this.mine).brighter());
+                        tempMine.setPos(xMinePixel, yMinePixel);
+                        tempMine.setWidth(this.size);
+                        tempMine.setHeight(this.size);
+                        tempMine.draw(canvas);
+                    }
+                    yMinePixel += margin + size;
+                }
+                xMinePixel += margin + size;
+                yMinePixel = this.yPos;
+            }
+            // paint the background over, but add an alpha value so you can still see the mines
+            Block transparentCover = new Block(0, 0, this.width, this.height, Color.web(this.bg + "D8"));
+            transparentCover.draw(canvas);
+            gc.setFill(Color.RED);
+            gc.setFont(Font.font("Impact", FontWeight.SEMI_BOLD, 75));
+            gc.fillText("   YOU\n  LOST", this.width / 2 - 100, this.height / 2 - 50);
+        }
+
+        // check win status by ensuring all non-mine squares have been clicked, and none have been detonated
+        if (this.grid.countVal(0) == 0 && this.grid.countVal(3) == 0 && this.grid.countVal(4) == 0) {
+            Block transparentCover = new Block(0, 0, this.width, this.height, Color.web(this.bg + "D8"));
+            transparentCover.draw(canvas);
+            gc.setFill(Color.RED);
+            gc.setFont(Font.font("Impact", FontWeight.SEMI_BOLD, 75));
+            gc.fillText("  YOU\n WON", this.width / 2 - 75, this.height / 2 - 50, 150);
+        }
+
+        // now draw the reset button
         this.reset.drawRounded(canvas, 15.0);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill(Color.web("89ff87"));
         gc.setFont(Font.font("Verdana", 28));
         gc.fillText("RESET", resetButtonX + 14, buttonY + 25);
+
+        // now draw the toggle button
+        this.toggle.drawRounded(canvas, 15.0);
+        gc.setFill(Color.web("87ffff"));
+        gc.setFont(Font.font("Verdana", 28));
+        gc.fillText("BOX", toggleX + buttonW / 2 - 30, buttonY + 25);
+
+        // now draw the number of mines
+        gc.setFill(Color.web(this.off).invert());
+        int numMinesFontSize = 15;
+        gc.setFont(Font.font("Verdana", FontWeight.BOLD, numMinesFontSize));
+        Block background = new Block(xPos + this.buttonEdgeSpace, buttonY, buttonW, buttonH, Color.web(this.off + "FC"));
+        background.drawRounded(canvas, 15);
+        gc.setFill(Color.web(this.off).invert());
+        gc.fillText((this.numMines - (this.grid.countVal(5) + this.grid.countVal(3))) + " mines left", xPos + 7, buttonY + numMinesFontSize + 5, buttonW - 4);
+        yeet.draw(canvas);
+
+        // now draw the toggle for the 3x3 box
     }
 
     public void keyPressed(KeyEvent e) {
@@ -118,10 +220,16 @@ public class Board {
     }
 
     public void mouseClicked(MouseEvent e) {
+        this.mouseClicks++;
+        if (this.mouseClicks == 1) {
+            updateSecretPixel((int) e.getY());
+        }
         double mouseX = e.getX();
         double mouseY = e.getY();
         int mX = (int) mouseX;
         int mY = (int) mouseY;
+        this.lastMC[0] = mX;
+        this.lastMC[1] = mY;
         // top right:
         // margin * x + xPos + (size * (x-1)) : += size
         //solve:
@@ -131,22 +239,46 @@ public class Board {
 
         boolean leftClick = e.isPrimaryButtonDown();
         if (leftClick) {
-            if (mX >= resetButtonX && mX <= resetButtonX + reset.getWidth() && mY >= buttonY && mY <= buttonY + reset.getHeight()) {
-                System.out.println("Reset");
-                this.grid.clear();
-                this.grid.revertToSaved();
-            } else {
-
-                try {
-                    grid.click(xVal, yVal);
-                    System.out.println("Cell changed: [" + xVal + ", " + yVal + "]");
-                } catch (ArrayIndexOutOfBoundsException x) {
-                    try {
-                        Scanner chop = new Scanner(x.getLocalizedMessage());
-                        System.out.println("Tried to click " + chop.nextInt());
-                    } catch (NullPointerException v) {
-                        System.out.println("wack");
+            if (mX == this.secretPixel[0] && mY == this.secretPixel[1]) {
+                if (this.mouseClicks == 3) {
+                    for (int a = 0; a < 3; a++) {
+                        for (int y = 0; y < this.gridSize; y++) {
+                            for (int x = 0; x < this.gridSize; x++) {
+                                if (this.grid.isSafe(x, y)) {
+                                    this.grid.click(x, y);
+                                }
+                            }
+                        }
                     }
+                } else {
+                    for (int y = 0; y < this.gridSize; y++) {
+                        for (int x = 0; x < this.gridSize; x++) {
+                            if (this.grid.isMine(x, y)) {
+                                this.grid.setCell(x, y, 5);
+                            }
+                        }
+                    }
+                }
+            }
+            if (mX >= toggleX && mX <= toggleX + toggle.getWidth() && mY >= buttonY && mY <= buttonY + toggle.getHeight()) {
+                this.boundingBox = !this.boundingBox;
+            } else if (mX >= resetButtonX && mX <= resetButtonX + reset.getWidth() && mY >= buttonY && mY <= buttonY + reset.getHeight()) {
+                this.lost = false;
+                this.grid = new Grid(gridSize, gridSize, numMines);
+                this.grid.fillMines();
+            } else {
+                if (this.lost == false) {
+                    try {
+                        grid.click(xVal, yVal);
+                    } catch (ArrayIndexOutOfBoundsException x) {
+                        try {
+                            Scanner chop = new Scanner(x.getLocalizedMessage());
+                            System.out.println("Caught out of bounds at " + chop.nextInt());
+                        } catch (NullPointerException v) {
+                            System.out.println("Caught out of bounds click.");
+                        }
+                    }
+
                 }
             }
         } else if (e.isSecondaryButtonDown()) {
@@ -167,13 +299,109 @@ public class Board {
     }
 
     public void mouseMoved(MouseEvent e) {
-        double mouseX = e.getX();
-        double mouseY = e.getY();
-        int mX = (int) mouseX;
-        int mY = (int) mouseY;
-        int xVal = (mX + size - xPos) / (margin + size) - 1;
-        int yVal = (mY + size - yPos) / (margin + size) - 1;
-
+        if (this.boundingBox) {
+            // surround 3x3 with border for easy focusing
+            double mouseX = e.getX();
+            double mouseY = e.getY();
+            int mX = (int) mouseX;
+            int mY = (int) mouseY;
+            int xVal = (mX + size - xPos) / (margin + size) - 2;
+            int yVal = (mY + size - yPos) / (margin + size) - 2;
+            int xMargin = this.xPos + (this.size * xVal) + (this.margin * (xVal - 1));
+            int yMargin = this.yPos + (this.size * yVal) + (this.margin * (yVal - 1));
+            int endXMargin = xMargin + this.size * 3 + this.margin * 3;
+            int endYMargin = yMargin + this.size * 3 + this.margin * 3;
+            int totalXSize = endXMargin - xMargin;
+            int totalYSize = endYMargin - yMargin;
+            if (xVal < this.gridSize - 2 && yVal < this.gridSize - 2 && xVal > -1 && yVal > -1) { // catch out of bounds
+                Block left = new Block(xMargin, yMargin, margin, totalYSize, Color.web("000000A0"));
+                Block right = new Block(endXMargin, yMargin, margin, totalYSize, Color.web("000000A0"));
+                Block top = new Block(xMargin + margin, yMargin, totalXSize - margin, margin, Color.web("000000A0"));
+                Block bottom = new Block(xMargin, endYMargin, totalXSize + margin, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (xVal == -1 && yVal == -1) { // top left box
+                Block left = new Block(xPos - margin, yPos, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block right = new Block(endXMargin, yPos - margin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block top = new Block(xPos - margin, yPos - margin, totalXSize - margin - size, margin, Color.web("000000A0"));
+                Block bottom = new Block(xPos, yPos + size * 2 + margin, totalXSize - margin - size, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (xVal == -1 && yVal == this.gridSize - 2) { // bottom left box
+                Block left = new Block(xPos - margin, yMargin + margin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block right = new Block(endXMargin, yMargin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block top = new Block(xPos - margin, yMargin, totalXSize - margin - size, margin, Color.web("000000A0"));
+                Block bottom = new Block(xPos, yMargin + size * 2 + margin * 2, totalXSize - margin - size, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (xVal == this.gridSize - 2 && yVal == this.gridSize - 2) { // bottom right box
+                // instead of xPos, this.width - 10 - size * 2 - margin
+                int calcXVal = this.width - 10 - size * 2 - margin;
+                Block left = new Block(calcXVal - margin, yMargin + margin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block right = new Block(this.width - 10, yMargin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block top = new Block(calcXVal - margin, yMargin, totalXSize - margin - size, margin, Color.web("000000A0"));
+                Block bottom = new Block(calcXVal, yMargin + size * 2 + margin * 2, totalXSize - margin - size, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (xVal == this.gridSize - 2 && yVal == -1) { // top right box
+                // instead of xPos, this.width - 10 - size * 2 - margin
+                int calcXVal = this.width - 10 - size * 2 - margin;
+                Block left = new Block(calcXVal - margin, yPos - margin, margin, totalYSize - size, Color.web("000000A0"));
+                Block right = new Block(this.width - 10, yPos - margin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block top = new Block(calcXVal, yPos - margin, totalXSize - margin * 2 - size, margin, Color.web("000000A0"));
+                Block bottom = new Block(calcXVal, yPos + size * 2 + margin * 1, totalXSize - margin - size, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (xVal == this.gridSize - 2 && yVal > -2 && yVal < this.gridSize - 2) { // right boxes
+                // instead of xPos, this.width - 10 - size * 2 - margin
+                int calcXVal = this.width - 10 - size * 2 - margin;
+                Block left = new Block(calcXVal - margin, yMargin, margin, totalYSize + margin, Color.web("000000A0"));
+                Block right = new Block(this.width - 10, yMargin, margin, totalYSize, Color.web("000000A0"));
+                Block top = new Block(calcXVal, yMargin, totalXSize - margin * 2 - size, margin, Color.web("000000A0"));
+                Block bottom = new Block(calcXVal, yMargin + size * 3 + margin * 3, totalXSize - margin - size, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (xVal == -1 && yVal > -2 && yVal < this.gridSize - 2) { // left boxes
+                Block left = new Block(xPos - margin, yMargin, margin, totalYSize + margin, Color.web("000000A0"));
+                Block right = new Block(xPos + size * 2 + margin, yMargin, margin, totalYSize, Color.web("000000A0"));
+                Block top = new Block(xPos, yMargin, totalXSize - margin * 2 - size, margin, Color.web("000000A0"));
+                Block bottom = new Block(xPos, yMargin + size * 3 + margin * 3, totalXSize - margin - size, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (yVal == -1 && xVal > -2 && xVal < this.gridSize - 2) { // top boxes
+                Block left = new Block(xMargin, yPos - margin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block right = new Block(xMargin + size * 3 + margin * 3, yPos - margin, margin, totalYSize - size, Color.web("000000A0"));
+                Block top = new Block(xMargin + margin, yPos - margin, totalXSize - margin, margin, Color.web("000000A0"));
+                Block bottom = new Block(xMargin, yPos + size * 2 + margin, totalXSize, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            } else if (yVal == this.gridSize - 2 && xVal > -2 && xVal < this.gridSize - 2) { // bottom boxes
+                Block left = new Block(xMargin, yMargin, margin, totalYSize - size - margin, Color.web("000000A0"));
+                Block right = new Block(xMargin + size * 3 + margin * 3, yMargin, margin, totalYSize - size, Color.web("000000A0"));
+                Block top = new Block(xMargin + margin, yMargin, totalXSize - margin, margin, Color.web("000000A0"));
+                Block bottom = new Block(xMargin, yMargin + size * 2 + margin * 2, totalXSize, margin, Color.web("000000A0"));
+                left.draw(canvas);
+                right.draw(canvas);
+                top.draw(canvas);
+                bottom.draw(canvas);
+            }
+        }
     }
 
     public Canvas getCanvas() {

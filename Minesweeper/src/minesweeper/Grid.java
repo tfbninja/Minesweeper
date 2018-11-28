@@ -52,15 +52,12 @@ public class Grid {
     }
 
     public void fillMines() {
-        System.out.println("called");
         this.lastPlayArea = this.playArea;
-        int timeSeed = Integer.valueOf(LocalDateTime.now().toString().trim().replaceAll("\\D", "").substring(0, 10));
+        int timeSeed = LocalDateTime.now().getNano();
         Random miner = new Random(timeSeed);
         ArrayList<Integer> xIndices = new ArrayList<>();
         ArrayList<Integer> yIndices = new ArrayList<>();
-        System.out.println("inited");
         for (int i = 0; i < this.numberOfMines; i++) {
-            System.out.println("Loop " + i);
             int tempX = -1;
             int tempY = -1;
             do {
@@ -70,12 +67,10 @@ public class Grid {
             xIndices.add(tempX);
             yIndices.add(tempY);
         }
-        System.out.println("looped");
         // now we have lists of mine positions
         for (int i = 0; i < this.numberOfMines; i++) {
             this.playArea[yIndices.get(i)][xIndices.get(i)] = 2;
         }
-        System.out.println("done");
     }
 
     public int getWidth() {
@@ -127,7 +122,8 @@ public class Grid {
     }
 
     public boolean isSafe(int xPos, int yPos) {
-        return !isMine(yPos, xPos);
+        int val = this.playArea[yPos][xPos];
+        return val == 0 || val == 1 || val == 3;
     }
 
     public void flag(int xPos, int yPos) {
@@ -177,13 +173,9 @@ public class Grid {
         this.playArea = newArea;
     }
 
-    public void setCell(int x, int y, boolean value) {
+    public void setCell(int x, int y, int value) {
         this.lastPlayArea = this.playArea;
-        if (value) {
-            this.playArea[y][x] = 1;
-        } else {
-            this.playArea[y][x] = 0;
-        }
+        this.playArea[y][x] = value;
     }
 
     public int getCell(int x, int y) {
@@ -198,24 +190,56 @@ public class Grid {
         }
     }
 
+    public int countVal(int value) {
+        int count = 0;
+        for (int y = 0; y < this.length; y++) {
+            for (int x = 0; x < this.width; x++) {
+                if (this.playArea[y][x] == value) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public void click(int x, int y) {
         this.lastPlayArea = this.playArea;
+
+        if (isMine(x, y) && countVal(1) == 0) { // it's kinda unfair to lose right out of the box
+            int newX = 0;
+            int newY = 0;
+            while (1 == 1) {
+                if (isMine(newX, newY)) {
+                    if (newX < this.width - 1) {
+                        newX++;
+                    } else {
+                        newY++;
+                        newX = 0;
+                    }
+                } else {
+                    this.playArea[newY][newX] = 2;
+                    System.out.println("Succesfully saved you from a mine, now at: " + newX + ", " + newY);
+                    this.playArea[y][x] = 1;
+                    break;
+                }
+            }
+        }
         switch (this.playArea[y][x]) {
             case 0:
                 this.playArea[y][x] = 1;
-                // begin clicking all the other zeroes .... yay...
-                if (safeCheck(x - 1, y) == 0) {
-                    System.out.println(safeCheck(x - 1, y));
-                    click(x - 1, y);
-                }
-                if (safeCheck(x + 1, y) == 0) {
-                    click(x + 1, y);
-                }
-                if (safeCheck(x, y - 1) == 0) {
-                    click(x, y - 1);
-                }
-                if (safeCheck(x, y + 1) == 0) {
-                    click(x, y + 1);
+                if (getNeighbors(x, y) == 0) {
+                    if (safeCheck(x - 1, y) > -1) {
+                        click(x - 1, y);
+                    }
+                    if (safeCheck(x + 1, y) > -1) {
+                        click(x + 1, y);
+                    }
+                    if (safeCheck(x, y - 1) > -1) {
+                        click(x, y - 1);
+                    }
+                    if (safeCheck(x, y + 1) > -1) {
+                        click(x, y + 1);
+                    }
                 }
                 break;
             case 1:
@@ -227,6 +251,9 @@ public class Grid {
                 break;
             case 4:
                 break;
+            case 5:
+                break;
+
         }
     }
 
@@ -235,7 +262,6 @@ public class Grid {
     }
 
     public int getNeighbors(int xPos, int yPos) {
-        System.out.println("xPos: " + xPos + ", yPos: " + yPos + ", length: " + this.length + ", width: " + this.width);
         int neighbors = 0;
         //check neighbors (with bounds checks)
         if (xPos > 0) {

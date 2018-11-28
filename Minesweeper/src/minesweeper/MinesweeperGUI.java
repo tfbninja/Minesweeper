@@ -3,15 +3,13 @@ package minesweeper;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class MinesweeperGUI extends Application {
 
-    private static final int WIDTH = 357;
+    private static final int WIDTH = 426;
     private static final int HEIGHT = 500;
     private int startTime;
 
@@ -19,8 +17,6 @@ public class MinesweeperGUI extends Application {
         HBox root = new HBox();
 
         Board board = new Board(WIDTH, HEIGHT);
-        Block bg = new Block(0, 0, WIDTH, HEIGHT, Color.web("ceceb5")); // nice light gray/yellow
-        bg.draw(board.getCanvas());
 
         board.drawBlocks();
 
@@ -35,21 +31,26 @@ public class MinesweeperGUI extends Application {
             public void handle(MouseEvent event) {
                 board.mouseClicked(event);
                 board.drawBlocks();
-            }
-        });
-        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            public void handle(KeyEvent eventa) {
-                board.keyPressed(eventa);
-                board.drawBlocks();
+                board.mouseMoved(event);
             }
         });
         /*
-         * scene.setOnMouseMoved(new EventHandler<MouseEvent>() { public void
-         * handle(MouseEvent eventb) {
-         *
-         * board.drawBlocks(); } });
-         *
+         * scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+         * public void handle(KeyEvent eventa) {
+         * board.keyPressed(eventa);
+         * board.drawBlocks();
+         * }
+         * });
          */
+
+        scene.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent eventb) {
+                board.drawBlocks();
+                board.mouseMoved(eventb);
+
+            }
+        });
+
     }
 
     public static void main(String args[]) {
