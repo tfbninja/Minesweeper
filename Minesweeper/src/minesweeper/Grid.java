@@ -48,28 +48,34 @@ public class Grid {
             Arrays.fill(this.savedPlayArea[i], 0);
         }
         this.numberOfMines = numMines;
-        fillMines();
+        fillMines("Filled constructor");
     }
 
-    public void fillMines() {
+    public int numFlags() {
+        int count = this.countVal(3) + this.countVal(5);
+        return count;
+    }
+
+    public void fillMines(String method) {
+        System.out.println("fillMines() called from " + method);
         this.lastPlayArea = this.playArea;
+        for (int i = 0; i < this.length; i++) { // take out any old mines
+            Arrays.fill(this.playArea[i], 0);
+        }
         int timeSeed = LocalDateTime.now().getNano();
         Random miner = new Random(timeSeed);
-        ArrayList<Integer> xIndices = new ArrayList<>();
-        ArrayList<Integer> yIndices = new ArrayList<>();
+        ArrayList<int[]> positions = new ArrayList<>();
         for (int i = 0; i < this.numberOfMines; i++) {
-            int tempX = -1;
-            int tempY = -1;
+            int[] position = {-1, -1};
             do {
-                tempX = miner.nextInt(this.getWidth());
-                tempY = miner.nextInt(this.getLength());
-            } while ((xIndices.indexOf(tempX) > -1 && xIndices.indexOf(tempX) == yIndices.indexOf(tempY)) || tempX < 0 || tempY < 0);
-            xIndices.add(tempX);
-            yIndices.add(tempY);
+                position[0] = miner.nextInt(this.getWidth());
+                position[1] = miner.nextInt(this.getLength());
+            } while (position[0] < 0 || position[1] < 0 || positions.contains(position));
+            positions.add(position);
         }
         // now we have lists of mine positions
         for (int i = 0; i < this.numberOfMines; i++) {
-            this.playArea[yIndices.get(i)][xIndices.get(i)] = 2;
+            this.playArea[positions.get(i)[1]][positions.get(i)[0]] = 2;
         }
     }
 
@@ -196,6 +202,14 @@ public class Grid {
             for (int x = 0; x < this.width; x++) {
                 if (this.playArea[y][x] == value) {
                     count++;
+                }
+            }
+        }
+        int count2 = 0;
+        for (int x = 0; x < this.width; x++) {
+            for (int y = 0; y < this.length; y++) {
+                if (safeCheck(x, y) == value) {
+                    count2++;
                 }
             }
         }

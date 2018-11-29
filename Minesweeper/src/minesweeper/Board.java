@@ -22,7 +22,8 @@ public class Board {
     private int mouseClicks = 0;
 
     private int gridSize = 24;
-    private int numMines = (int) (this.gridSize * this.gridSize * 0.13); // 0.14 is a nice middle ground between beginner and intermediate
+    private int numMines = (int) (this.gridSize * this.gridSize * 0.134);
+    private int minesLeft = numMines;
     /*
      * Minesweeper Mine Densities:
      * 0.12 - beginner
@@ -74,7 +75,7 @@ public class Board {
         this.height = height;
         canvas = new Canvas(width, height);
         grid = new Grid(gridSize, gridSize, numMines);
-        this.grid.fillMines();
+        this.grid.fillMines("Filled board constructor");
         this.resetButtonX = width / 2 - buttonW / 2;
         this.toggleX = this.width - this.buttonEdgeSpace - this.buttonW;
         this.buttonY = (this.height - (this.height - (10 + (this.gridSize * this.size) + (this.margin * (this.gridSize - 1)))) / 2) - this.buttonH / 2;
@@ -83,6 +84,7 @@ public class Board {
         this.grid.savePlayArea();
         this.secretPixel[0] = this.width;
         this.secretPixel[1] = this.height;
+        System.out.println(this.grid.getNumMines());
     }
 
     public Grid getGrid() {
@@ -209,7 +211,7 @@ public class Board {
         Block background = new Block(xPos + this.buttonEdgeSpace, buttonY, buttonW, buttonH, Color.web(this.off + "FC"));
         background.drawRounded(canvas, 15);
         gc.setFill(Color.web(this.off).invert());
-        gc.fillText((this.numMines - (this.grid.countVal(5) + this.grid.countVal(3))) + " mines left", xPos + 7, buttonY + numMinesFontSize + 5, buttonW - 4);
+        gc.fillText((this.grid.getNumMines() - this.grid.numFlags()) + " mines left", xPos + 7, buttonY + numMinesFontSize + 5, buttonW - 4);
         yeet.draw(canvas);
 
         // now draw the toggle for the 3x3 box
@@ -254,6 +256,9 @@ public class Board {
                     for (int y = 0; y < this.gridSize; y++) {
                         for (int x = 0; x < this.gridSize; x++) {
                             if (this.grid.isMine(x, y)) {
+                                if (this.grid.isUntouched(x, y)) {
+                                    this.minesLeft--;
+                                }
                                 this.grid.setCell(x, y, 5);
                             }
                         }
@@ -265,7 +270,7 @@ public class Board {
             } else if (mX >= resetButtonX && mX <= resetButtonX + reset.getWidth() && mY >= buttonY && mY <= buttonY + reset.getHeight()) {
                 this.lost = false;
                 this.grid = new Grid(gridSize, gridSize, numMines);
-                this.grid.fillMines();
+                this.grid.fillMines("Reset button handler");
             } else {
                 if (this.lost == false) {
                     try {
@@ -283,14 +288,22 @@ public class Board {
             }
         } else if (e.isSecondaryButtonDown()) {
             // flag
-            try {
-                this.grid.flag(xVal, yVal);
-            } catch (ArrayIndexOutOfBoundsException c) {
+            if (!this.lost) {
                 try {
-                    Scanner chop = new Scanner(c.getLocalizedMessage());
-                    System.out.println("Tried to right click " + chop.nextInt());
-                } catch (NullPointerException v) {
-                    System.out.println("wack");
+                    this.grid.flag(xVal, yVal);
+                    if (this.grid.isFlagged(xVal, yVal)) {
+                        this.minesLeft--;
+                    } else {
+                        this.minesLeft++;
+                    }
+                    System.out.println("Mines left: " + this.minesLeft);
+                } catch (ArrayIndexOutOfBoundsException c) {
+                    try {
+                        Scanner chop = new Scanner(c.getLocalizedMessage());
+                        System.out.println("Tried to right click " + chop.nextInt());
+                    } catch (NullPointerException v) {
+                        System.out.println("wack");
+                    }
                 }
             }
         } else {
@@ -299,7 +312,7 @@ public class Board {
     }
 
     public void mouseMoved(MouseEvent e) {
-        if (this.boundingBox) {
+        if (this.boundingBox && !this.lost) {
             // surround 3x3 with border for easy focusing
             double mouseX = e.getX();
             double mouseY = e.getY();
