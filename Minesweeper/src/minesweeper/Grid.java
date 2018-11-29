@@ -56,8 +56,12 @@ public class Grid {
         return count;
     }
 
+    public int getMinesLeft() {
+        return this.numberOfMines - this.numFlags();
+    }
+
     public void fillMines(String method) {
-        System.out.println("fillMines() called from " + method);
+        //System.out.println("fillMines() called from " + method); //debug
         this.lastPlayArea = this.playArea;
         for (int i = 0; i < this.length; i++) { // take out any old mines
             Arrays.fill(this.playArea[i], 0);
@@ -67,9 +71,15 @@ public class Grid {
         ArrayList<int[]> positions = new ArrayList<>();
         for (int i = 0; i < this.numberOfMines; i++) {
             int[] position = {-1, -1};
+            boi:
             do {
                 position[0] = miner.nextInt(this.getWidth());
                 position[1] = miner.nextInt(this.getLength());
+                for (int a = 0; a < positions.size(); a++) {
+                    if (position[0] == positions.get(a)[0] && position[1] == positions.get(a)[1]) {
+                        continue boi;
+                    }
+                }
             } while (position[0] < 0 || position[1] < 0 || positions.contains(position));
             positions.add(position);
         }
@@ -232,7 +242,7 @@ public class Grid {
                     }
                 } else {
                     this.playArea[newY][newX] = 2;
-                    System.out.println("Succesfully saved you from a mine, now at: " + newX + ", " + newY);
+                    // System.out.println("Succesfully saved you from a mine, now at: " + newX + ", " + newY); // debug
                     this.playArea[y][x] = 1;
                     break;
                 }

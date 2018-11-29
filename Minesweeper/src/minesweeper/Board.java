@@ -22,7 +22,7 @@ public class Board {
     private int mouseClicks = 0;
 
     private int gridSize = 24;
-    private int numMines = (int) (this.gridSize * this.gridSize * 0.134);
+    private int numMines = (int) (this.gridSize * this.gridSize * 0.136);
     private int minesLeft = numMines;
     /*
      * Minesweeper Mine Densities:
@@ -84,7 +84,7 @@ public class Board {
         this.grid.savePlayArea();
         this.secretPixel[0] = this.width;
         this.secretPixel[1] = this.height;
-        System.out.println(this.grid.getNumMines());
+        //System.out.println(this.grid.getNumMines());
     }
 
     public Grid getGrid() {
@@ -132,7 +132,7 @@ public class Board {
                 } else if (this.grid.isClicked(x, y)) {
                     temp.setColor(Color.web(this.clicked)); // light blue
                 } else { // there's a problem
-                    System.out.println(this.grid.getCell(x, y));
+                    //System.out.println(this.grid.getCell(x, y));
                     temp.setColor(Color.BLUEVIOLET);
                 }
                 temp.setX(xPixel);
@@ -211,7 +211,7 @@ public class Board {
         Block background = new Block(xPos + this.buttonEdgeSpace, buttonY, buttonW, buttonH, Color.web(this.off + "FC"));
         background.drawRounded(canvas, 15);
         gc.setFill(Color.web(this.off).invert());
-        gc.fillText((this.grid.getNumMines() - this.grid.numFlags()) + " mines left", xPos + 7, buttonY + numMinesFontSize + 5, buttonW - 4);
+        gc.fillText((this.grid.getMinesLeft()) + " mines left", xPos + 7, buttonY + numMinesFontSize + 5, buttonW - 4);
         yeet.draw(canvas);
 
         // now draw the toggle for the 3x3 box
@@ -242,7 +242,7 @@ public class Board {
         boolean leftClick = e.isPrimaryButtonDown();
         if (leftClick) {
             if (mX == this.secretPixel[0] && mY == this.secretPixel[1]) {
-                if (this.mouseClicks == 3) {
+                if (this.mouseClicks == 3 || this.mouseClicks == 4) {
                     for (int a = 0; a < 3; a++) {
                         for (int y = 0; y < this.gridSize; y++) {
                             for (int x = 0; x < this.gridSize; x++) {
@@ -256,7 +256,7 @@ public class Board {
                     for (int y = 0; y < this.gridSize; y++) {
                         for (int x = 0; x < this.gridSize; x++) {
                             if (this.grid.isMine(x, y)) {
-                                if (this.grid.isUntouched(x, y)) {
+                                if (this.grid.getCell(x, y) == 2) {
                                     this.minesLeft--;
                                 }
                                 this.grid.setCell(x, y, 5);
@@ -278,9 +278,9 @@ public class Board {
                     } catch (ArrayIndexOutOfBoundsException x) {
                         try {
                             Scanner chop = new Scanner(x.getLocalizedMessage());
-                            System.out.println("Caught out of bounds at " + chop.nextInt());
+                            //System.out.println("Caught out of bounds at " + chop.nextInt());
                         } catch (NullPointerException v) {
-                            System.out.println("Caught out of bounds click.");
+                            //System.out.println("Caught out of bounds click.");
                         }
                     }
 
@@ -290,19 +290,19 @@ public class Board {
             // flag
             if (!this.lost) {
                 try {
-                    this.grid.flag(xVal, yVal);
-                    if (this.grid.isFlagged(xVal, yVal)) {
+                    if (this.grid.getCell(xVal, yVal) == 3 || this.grid.getCell(xVal, yVal) == 5) {
                         this.minesLeft--;
                     } else {
                         this.minesLeft++;
                     }
-                    System.out.println("Mines left: " + this.minesLeft);
+                    this.grid.flag(xVal, yVal);
+                    //System.out.println("Mines left: " + this.minesLeft);
                 } catch (ArrayIndexOutOfBoundsException c) {
                     try {
                         Scanner chop = new Scanner(c.getLocalizedMessage());
-                        System.out.println("Tried to right click " + chop.nextInt());
+                        //System.out.println("Tried to right click " + chop.nextInt());
                     } catch (NullPointerException v) {
-                        System.out.println("wack");
+                        //System.out.println("wack");
                     }
                 }
             }
