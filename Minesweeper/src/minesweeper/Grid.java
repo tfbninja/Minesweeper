@@ -25,6 +25,9 @@ public class Grid {
     private int[][] lastPlayArea;
     private static int[][] savedPlayArea;
     private int numberOfMines;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private String deltaTime;
 
     public Grid() {
         this.width = 10;
@@ -36,6 +39,8 @@ public class Grid {
             Arrays.fill(this.savedPlayArea[i], 0);
         }
         this.numberOfMines = 10;
+        this.startTime = null;
+        this.deltaTime = "0:00";
     }
 
     public Grid(int width, int length, int numMines) {
@@ -49,6 +54,17 @@ public class Grid {
         }
         this.numberOfMines = numMines;
         fillMines("Filled constructor");
+        this.startTime = LocalDateTime.now();
+        this.deltaTime = "0:00";
+    }
+
+    public String stopTimer() {
+        this.endTime = LocalDateTime.now();
+        return this.getTimer();
+    }
+
+    public String getTimer() {
+        this.deltaTime = this.startTime.s
     }
 
     public int numFlags() {
@@ -57,7 +73,7 @@ public class Grid {
     }
 
     public int getMinesLeft() {
-        return this.numberOfMines - this.numFlags();
+        return this.countVal(2) - this.countVal(3);
     }
 
     public void fillMines(String method) {
