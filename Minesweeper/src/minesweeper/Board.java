@@ -129,7 +129,9 @@ public class Board {
                 } else if (this.grid.isDetonated(x, y)) {
                     temp.setColor(Color.web(this.mine)); // red
                     this.lost = true;
-                } else if (this.grid.isClicked(x, y)) {
+                    this.grid.stopTimer();
+                } else if (this.grid.
+                        isClicked(x, y)) {
                     temp.setColor(Color.web(this.clicked)); // light blue
                 } else { // there's a problem
                     //System.out.println(this.grid.getCell(x, y));
@@ -213,8 +215,16 @@ public class Board {
         gc.setFill(Color.web(this.off).invert());
         gc.fillText((this.grid.getMinesLeft()) + " mines left", xPos + 7, buttonY + numMinesFontSize + 5, buttonW - 4);
         yeet.draw(canvas);
-
-        // now draw the toggle for the 3x3 box
+        /*
+         * // now draw the elapsed time
+         * Block timeBlock = new Block(resetButtonX - 20, buttonY + 35, buttonW
+         * + 100, buttonH, Color.web(this.off + "FC"));
+         * timeBlock.drawRounded(canvas, 15);
+         * gc.setFill(Color.web("87ffff"));
+         * gc.setFont(Font.font("Verdana", 20));
+         * gc.fillText("Elapsed time: " + this.grid.getTimer(), width / 2 - 70,
+         * buttonY + 57);
+         */
     }
 
     public void keyPressed(KeyEvent e) {
@@ -268,6 +278,7 @@ public class Board {
             if (mX >= toggleX && mX <= toggleX + toggle.getWidth() && mY >= buttonY && mY <= buttonY + toggle.getHeight()) {
                 this.boundingBox = !this.boundingBox;
             } else if (mX >= resetButtonX && mX <= resetButtonX + reset.getWidth() && mY >= buttonY && mY <= buttonY + reset.getHeight()) {
+                this.grid.stopTimer();
                 this.lost = false;
                 this.grid = new Grid(gridSize, gridSize, numMines);
                 this.grid.fillMines("Reset button handler");

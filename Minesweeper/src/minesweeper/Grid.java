@@ -40,7 +40,7 @@ public class Grid {
         }
         this.numberOfMines = 10;
         this.startTime = null;
-        this.deltaTime = "0:00";
+        this.deltaTime = "";
     }
 
     public Grid(int width, int length, int numMines) {
@@ -55,16 +55,26 @@ public class Grid {
         this.numberOfMines = numMines;
         fillMines("Filled constructor");
         this.startTime = LocalDateTime.now();
-        this.deltaTime = "0:00";
+        this.deltaTime = "";
     }
 
     public String stopTimer() {
         this.endTime = LocalDateTime.now();
-        return this.getTimer();
+        return this.getTimer(endTime);
     }
 
     public String getTimer() {
-        this.deltaTime = this.startTime.s
+        String seconds = String.valueOf((LocalDateTime.now().getSecond() - this.startTime.getSecond()) % 60);
+        String minutes = String.valueOf(LocalDateTime.now().getMinute() - this.startTime.getMinute());
+        this.deltaTime = minutes + ":" + seconds;
+        return this.deltaTime;
+    }
+
+    public String getTimer(LocalDateTime endTime) {
+        String seconds = String.valueOf(endTime.now().getSecond() - this.startTime.getSecond());
+        String minutes = String.valueOf(endTime.now().getMinute() - this.startTime.getMinute());
+        this.deltaTime = minutes + ":" + seconds;
+        return this.deltaTime;
     }
 
     public int numFlags() {

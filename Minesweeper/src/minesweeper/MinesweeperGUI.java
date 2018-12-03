@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 public class MinesweeperGUI extends Application {
 
     private static final int WIDTH = 426;
-    private static final int HEIGHT = 500;
+    private static final int HEIGHT = 520;
     private int startTime;
 
     public void start(Stage stage) {
