@@ -48,7 +48,7 @@ public class Board {
     private String mine = "ba0909";
     private String bg = "ceceb5";
 
-    private String[] neighborColor = {"00001e", "0000e8", "e8b900", "e89f22", "e85622", "e82222"};
+    private String[] neighborColor = {"00001e", "0000e8", "e88b00", "e86c00", "e85622", "e82222"};
 
     private Block reset;
     private Block toggle;
@@ -65,12 +65,12 @@ public class Board {
     private int menuMiddleY;
     private int buttonYSpace;
     private int buttonTextXAdjust = 20;
-    private int buttonTextYAdjust = 22;
-    private int easyAndHardXAdjust = 10;
+    private int buttonTextYAdjust = 23;
+    private int easyAndHardXAdjust = 13;
 
     private int[] secretPixel = {0, 0};
 
-    private boolean boundingBox = false;
+    private boolean boundingBox = true;
 
     public Board() {
         width = 600;
@@ -158,7 +158,7 @@ public class Board {
 
             gc.setFill(Color.web(this.buttonTextColor));
             gc.setFont(Font.font("Verdana", 20));
-            gc.fillText("EASY", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust, this.menuMiddleY - this.buttonYSpace + this.buttonTextYAdjust);
+            gc.fillText("EASY", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust +2, this.menuMiddleY - this.buttonYSpace + this.buttonTextYAdjust);
             gc.fillText("MEDIUM", this.menuX + this.buttonTextXAdjust, this.menuMiddleY + this.buttonTextYAdjust);
             gc.fillText("HARD", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust, this.menuMiddleY + this.buttonYSpace + this.buttonTextYAdjust);
 
@@ -310,7 +310,7 @@ public class Board {
                     if (mY >= this.menuMiddleY - this.buttonYSpace && mY <= this.menuMiddleY - this.buttonYSpace + this.buttonH) {
                         // easy button clicked
                         this.showMenu = false;
-                        this.boundingBox = true;
+                        //this.boundingBox = true;
                         this.setNumMines(this.mineDensities[0]);
                         this.lost = false;
                         this.grid = new Grid(gridSize, gridSize, numMines);
@@ -318,7 +318,7 @@ public class Board {
                     } else if (mY >= this.menuMiddleY && mY <= this.menuMiddleY + this.buttonH) {
                         // medium button clicked
                         this.showMenu = false;
-                        this.boundingBox = true;
+                        //this.boundingBox = true;
                         this.setNumMines(this.mineDensities[1]);
                         this.lost = false;
                         this.grid = new Grid(gridSize, gridSize, numMines);
@@ -326,7 +326,7 @@ public class Board {
                     } else if (mY >= this.menuMiddleY + this.buttonYSpace && mY <= this.menuMiddleY + this.buttonYSpace + this.buttonH) {
                         // hard button clicked
                         this.showMenu = false;
-                        this.boundingBox = true;
+                        //this.boundingBox = true;
                         this.setNumMines(this.mineDensities[2]);
                         this.lost = false;
                         this.grid = new Grid(gridSize, gridSize, numMines);
@@ -367,7 +367,7 @@ public class Board {
                     this.grid = new Grid(gridSize, gridSize, numMines);
                     this.grid.fillMines("Reset button handler");
                     this.showMenu = true;
-                    this.boundingBox = false;
+                    //this.boundingBox = false;
                 } else {
                     if (this.lost == false) {
                         try {
@@ -410,7 +410,7 @@ public class Board {
     }
 
     public void mouseMoved(MouseEvent e) {
-        if (this.boundingBox && !this.lost) {
+        if (this.boundingBox && !this.lost && !this.showMenu) {
             // surround 3x3 with border for easy focusing
             double mouseX = e.getX();
             double mouseY = e.getY();

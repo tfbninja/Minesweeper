@@ -269,7 +269,7 @@ public class Grid {
                 } else {
                     this.playArea[newY][newX] = 2;
                     // System.out.println("Succesfully saved you from a mine, now at: " + newX + ", " + newY); // debug
-                    this.playArea[y][x] = 1;
+                    this.playArea[y][x] = 0;
                     break;
                 }
             }
