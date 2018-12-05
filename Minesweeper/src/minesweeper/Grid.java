@@ -290,6 +290,18 @@ public class Grid {
                     if (safeCheck(x, y + 1) > -1) {
                         click(x, y + 1);
                     }
+                    if (safeCheck(x - 1, y - 1) > -1) {
+                        click(x - 1, y - 1);
+                    }
+                    if (safeCheck(x - 1, y + 1) > -1) {
+                        click(x - 1, y + 1);
+                    }
+                    if (safeCheck(x + 1, y - 1) > -1) {
+                        click(x + 1, y - 1);
+                    }
+                    if (safeCheck(x + 1, y + 1) > -1) {
+                        click(x + 1, y + 1);
+                    }
                 }
                 break;
             case 1:

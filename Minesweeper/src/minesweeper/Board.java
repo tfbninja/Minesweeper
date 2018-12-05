@@ -22,7 +22,7 @@ public class Board {
     private int mouseClicks = 0;
 
     private int gridSize = 24;
-    private int numMines = (int) (this.gridSize * this.gridSize * 0.136);
+    private int numMines = (int) (this.gridSize * this.gridSize * 0.21);
     private int minesLeft = numMines;
     /*
      * Minesweeper Mine Densities:
@@ -144,13 +144,15 @@ public class Board {
                 temp.draw(canvas);
                 if (this.grid.isClicked(x, y)) {
                     int neighbors = this.grid.getNeighbors(x, y);
-                    if (neighbors < 6) {
-                        gc.setFill(Color.web(this.neighborColor[neighbors]));
-                    } else {
-                        gc.setFill(Color.web(this.neighborColor[5]));
+                    if (neighbors > 0) {
+                        if (neighbors < 6) {
+                            gc.setFill(Color.web(this.neighborColor[neighbors]));
+                        } else {
+                            gc.setFill(Color.web(this.neighborColor[5]));
+                        }
+                        gc.setFont(Font.font("Courier", FontWeight.BOLD, 15));
+                        gc.fillText(String.valueOf(neighbors), xPixel + 4, yPixel + 13);
                     }
-                    gc.setFont(Font.font("Courier", FontWeight.BOLD, 15));
-                    gc.fillText(String.valueOf(neighbors), xPixel + 4, yPixel + 13);
                 }
                 yPixel += margin + size;
             }
