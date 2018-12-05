@@ -26,10 +26,14 @@ public class Board {
     private int minesLeft = numMines;
     /*
      * Minesweeper Mine Densities:
-     * 0.12 - beginner
-     * 0.15 - intermediate
-     * 0.17 - advanced
+     * 0.15 - beginner
+     * 0.21 - intermediate
+     * 0.25 - advanced
      */
+    private double beginnerMineDensity = 0.15;
+    private double intermediateMineDensity = 0.21;
+    private double advancedMineDensity = 0.25;
+
     private int[] lastMC = {0, 0};
     private int resetButtonX;
     private int toggleX;
@@ -52,6 +56,15 @@ public class Board {
     private Block toggle;
     private boolean lost = false;
 
+    // difficulty level vars
+    private boolean showMenu = true;
+    private Block buttonEasy;
+    private Block buttonMed;
+    private Block buttonHard;
+    private int menuX;
+    private int menuMiddleY;
+    private int buttonYSpace;
+
     private int[] secretPixel = {0, 0};
 
     private boolean boundingBox = true;
@@ -68,6 +81,10 @@ public class Board {
         this.toggle = new Block(toggleX, buttonY, buttonW, buttonH, Color.web(off));
         this.secretPixel[0] = this.width;
         this.secretPixel[1] = this.height;
+
+        this.menuX = width / 2 - buttonW / 2;
+        this.menuMiddleY = height / 2 - buttonH / 2;
+        this.buttonYSpace = height / 4;
     }
 
     public Board(int width, int height) {
@@ -84,7 +101,10 @@ public class Board {
         this.grid.savePlayArea();
         this.secretPixel[0] = this.width;
         this.secretPixel[1] = this.height;
-        //System.out.println(this.grid.getNumMines());
+
+        this.menuX = width / 2 - buttonW / 2;
+        this.menuMiddleY = height / 2 - buttonH / 2;
+        this.buttonYSpace = height / 4;
     }
 
     public Grid getGrid() {
