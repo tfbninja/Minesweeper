@@ -158,9 +158,9 @@ public class Board {
 
             gc.setFill(Color.web(this.buttonTextColor));
             gc.setFont(Font.font("Verdana", 20));
-            gc.fillText("EASY", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust +2, this.menuMiddleY - this.buttonYSpace + this.buttonTextYAdjust);
-            gc.fillText("MEDIUM", this.menuX + this.buttonTextXAdjust, this.menuMiddleY + this.buttonTextYAdjust);
-            gc.fillText("HARD", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust, this.menuMiddleY + this.buttonYSpace + this.buttonTextYAdjust);
+            gc.fillText("EASY", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust + 2, this.menuMiddleY - this.buttonYSpace + this.buttonTextYAdjust);
+            gc.fillText("MEDIUM", this.menuX + this.buttonTextXAdjust - 1, this.menuMiddleY + this.buttonTextYAdjust);
+            gc.fillText("HARD", this.menuX + this.buttonTextXAdjust + easyAndHardXAdjust - 1, this.menuMiddleY + this.buttonYSpace + this.buttonTextYAdjust);
 
         } else {
             gc.setFill(Color.web(this.bg));
